@@ -17,14 +17,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let system_message = Message::new(MessageType::System, "You are a helpful assistant.");
 
     let mut conversation: Vec<Message> = vec![
-        system_message
+        system_message.clone()
     ];
 
     println!("Enter your message | 'q' to quit");
+    println!("{}", system_message);
     loop {
         // Ask for user input
         print!("{}", "[User]: ".bold().magenta());
-        io::stdout().flush()?; // Ensure prompt is printed
+        io::stdout().flush()?;
         let mut user_input = String::new();
         io::stdin().read_line(&mut user_input)?;
         let user_input = user_input.trim();
