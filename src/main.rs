@@ -1,9 +1,8 @@
 use dotenv::dotenv;
-use reqwest::Client;
-use serde_json::{json, Value};
 use std::env;
 use std::io::{self, Write};
 use toolius_maximus::{Message, MessageType};
+use toolius_maximus::{RequestBody, API};
 use colored::*;
 
 #[tokio::main]
@@ -13,7 +12,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let token = env::var("GITHUB_TOKEN")?;
 
     let url = "https://models.inference.ai.azure.com/chat/completions";
-    let client = Client::new();
+    let client = API::new(url.to_string(), token.to_string());
 
     let system_message = Message::new(MessageType::System, "You are a helpful assistant.");
 
@@ -41,26 +40,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         conversation.push(user_message);
 
         // Send the conversation to the API
-        let body = json!({
-            "messages": conversation.iter().map(|m| m.clone().json()).collect::<Vec<Value>>(),
-            "temperature": 1.0,
-            "top_p": 1.0,
-            "max_tokens": 1000,
-            "model": "gpt-4o-mini"
-        });
+        let body = RequestBody::new(
+            conversation
+                .iter()
+                .map(|m| m.json())
+                .collect(),
+            0.7,
+            1.0,
+            100,
+            "gpt-4o-mini".to_string(),
+        );
 
-        let res = client
-            .post(url)
-            .header("Content-Type", "application/json")
-            .header("Authorization", format!("Bearer {}", token))
-            .json(&body)
-            .send()
-            .await?;
-
-        let json: Value = res.json().await?;
+        let response = client.send(body).await?;
 
         // Parse and display assistant response
-        if let Some(choices) = json.get("choices").and_then(|c| c.as_array()) {
+        if let Some(choices) = response.get("choices").and_then(|c| c.as_array()) {
 
             // Add assistant's response to the conversation
             if let Some(content) = choices[0]
@@ -72,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 conversation.push(agent_message);
             }
         } else {
-            println!("Unexpected response format: {:?}", json);
+            println!("Unexpected response format: {:?}", response);
         }
     }
 
