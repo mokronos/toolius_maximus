@@ -48,25 +48,25 @@ impl fmt::Display for Message {
             MessageType::System => write!(
                 f,
                 "{} {}",
-                "[System]".bold().blue(),
+                "[System]:".bold().blue(),
                 self.content.green()
             ),
             MessageType::Agent => write!(
                 f,
                 "{} {}",
-                "[Agent]".bold().yellow(),
+                "[Agent]:".bold().yellow(),
                 self.content.green()
             ),
             MessageType::User => write!(
                 f,
                 "{} {}",
-                "[User]".bold().magenta(),
+                "[User]:".bold().magenta(),
                 self.content.yellow()
             ),
             MessageType::Tool => write!(
                 f,
                 "{} {}",
-                "[Tool]".bold().cyan(),
+                "[Tool]:".bold().cyan(),
                 self.content.white()
             ),
         }

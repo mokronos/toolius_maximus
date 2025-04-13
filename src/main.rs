@@ -38,6 +38,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let user_message = Message::new(MessageType::User, user_input);
 
+        // Clear the last line (user input prompt + input)
+        print!("\x1b[1A\x1b[2K"); // move up + clear line
+        io::stdout().flush()?;
+        println!("{}", user_message);
+
         conversation.push(user_message);
 
         // Send the conversation to the API
@@ -61,8 +66,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if let Some(content) = choices[0]
                 .get("message")
                 .and_then(|m| m.get("content"))
+                .and_then(|c| c.as_str())
             {
-                let agent_message = Message::new(MessageType::Agent, &content.to_string());
+                let agent_message = Message::new(MessageType::Agent, content);
                 println!("{}", agent_message);
                 conversation.push(agent_message);
             }
