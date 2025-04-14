@@ -1,20 +1,21 @@
 use dotenv::dotenv;
 use std::env;
 use std::io::{self, Write};
-use toolius_maximus::{Message, MessageType};
-use toolius_maximus::{RequestBody, API};
+use toolius_maximus::Message;
+use toolius_maximus::Client;
 use colored::*;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
 
-    dotenv().ok(); // Load .env
+    dotenv().ok();
     let token = env::var("GITHUB_TOKEN")?;
 
     let url = "https://models.inference.ai.azure.com/chat/completions";
-    let client = API::new(url.to_string(), token.to_string());
+    let client = Client::new(url.to_string(), token.to_string());
 
-    let system_message = Message::new(MessageType::System, "You are a helpful assistant.");
+    let system_message = Message::system("You are a helpful assistant".to_string());
 
     let mut conversation: Vec<Message> = vec![
         system_message.clone()
@@ -36,7 +37,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             break;
         }
 
-        let user_message = Message::new(MessageType::User, user_input);
+        let user_message = Message::user(user_input.to_string());
 
         // Clear the last line (user input prompt + input)
         print!("\x1b[1A\x1b[2K"); // move up + clear line
@@ -45,19 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         conversation.push(user_message);
 
-        // Send the conversation to the API
-        let body = RequestBody::new(
-            conversation
-                .iter()
-                .map(|m| m.json())
-                .collect(),
-            0.7,
-            1.0,
-            100,
-            "gpt-4o-mini".to_string(),
-        );
-
-        let response = client.send(body).await?;
+        let response = client.create("gpt-4o-mini".to_string(), conversation.clone()).await?;
 
         // Parse and display assistant response
         if let Some(choices) = response.get("choices").and_then(|c| c.as_array()) {
@@ -68,7 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .and_then(|m| m.get("content"))
                 .and_then(|c| c.as_str())
             {
-                let agent_message = Message::new(MessageType::Agent, content);
+                let agent_message = Message::agent(content.to_string());
                 println!("{}", agent_message);
                 conversation.push(agent_message);
             }

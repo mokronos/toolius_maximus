@@ -1,6 +1,5 @@
-mod messages;
 mod api;
+mod messages;
 
-
-pub use messages::{Message, MessageType};
-pub use api::{RequestBody, API};
+pub use api::Client;
+pub use messages::{AgentMessage, Message, SystemMessage, ToolMessage, UserMessage};
