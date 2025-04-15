@@ -3,6 +3,7 @@ use std::env;
 use std::io::{self, Write};
 use toolius_maximus::Message;
 use toolius_maximus::Client;
+use toolius_maximus::Tool;
 use colored::*;
 
 #[tokio::main]
@@ -68,4 +69,3 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
-
